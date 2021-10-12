@@ -22,26 +22,32 @@ namespace leveldb {
 // Grouping of constants.  We may want to make some of these
 // parameters set via options.
 namespace config {
+// level的最大值
 static const int kNumLevels = 7;
 
 // Level-0 compaction is started when we hit this many files.
+// level-0的sstable文件数量达到这个值开始compact
 static const int kL0_CompactionTrigger = 4;
 
 // Soft limit on number of level-0 files.  We slow down writes at this point.
+// level-0的sstable文件数量达到这个值开始慢处理写
 static const int kL0_SlowdownWritesTrigger = 8;
 
 // Maximum number of level-0 files.  We stop writes at this point.
+// level-0的sstable文件数量达到这个值停止写，阻塞到compact完成
 static const int kL0_StopWritesTrigger = 12;
 
 // Maximum level to which a new compacted memtable is pushed if it
-// does not create overlap.  We try to push to level 2 to avoid the
-// relatively expensive level 0=>1 compactions and to avoid some
+// does not create overlap(重叠).  We try to push to level 2 to avoid the
+// relatively(相对的) expensive level 0=>1 compactions and to avoid some
 // expensive manifest file operations.  We do not push all the way to
 // the largest level since that can generate a lot of wasted disk
 // space if the same key space is being repeatedly overwritten.
+// memtable允许被dump到的最大层级，为什么要dump到更高层级？后面看到了再补充
 static const int kMaxMemCompactLevel = 2;
 
-// Approximate gap in bytes between samples of data read during iteration.
+// Approximate gap in bytes between samples(样品) of data read during iteration.
+// 迭代的数据样品间的近似字节间隙？后面看到了再补充
 static const int kReadBytesPeriod = 1048576;
 
 }  // namespace config

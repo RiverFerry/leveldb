@@ -1325,6 +1325,7 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
 Status DBImpl::MakeRoomForWrite(bool force) {
   mutex_.AssertHeld();
   assert(!writers_.empty());
+  // batch传入的值非空，则允许delay
   bool allow_delay = !force;
   Status s;
   while (true) {

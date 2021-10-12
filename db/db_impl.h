@@ -197,9 +197,10 @@ class DBImpl : public DB {
 
   ManualCompaction* manual_compaction_ GUARDED_BY(mutex_);
 
+  // 正在服务的version链表
   VersionSet* const versions_ GUARDED_BY(mutex_);
 
-  // Have we encountered a background error in paranoid mode?
+  // Have we encountered a background error in paranoid(偏执) mode?
   Status bg_error_ GUARDED_BY(mutex_);
 
   CompactionStats stats_[config::kNumLevels] GUARDED_BY(mutex_);
