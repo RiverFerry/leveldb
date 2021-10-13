@@ -164,6 +164,7 @@ class Version {
   int compaction_level_;
 };
 
+// 双线链表记录当前db的状态
 class VersionSet {
  public:
   VersionSet(const std::string& dbname, const Options* options,
@@ -294,24 +295,38 @@ class VersionSet {
   void AppendVersion(Version* v);
 
   Env* const env_;
+  // 数据库路径
   const std::string dbname_;
   const Options* const options_;
+  // sstable的table cache
   TableCache* const table_cache_;
+  // comparator比较器
   const InternalKeyComparator icmp_;
+  // 下一个可用的file number
   uint64_t next_file_number_;
+  // manifest文件的file number
   uint64_t manifest_file_number_;
+  // 最后用过的seq
   uint64_t last_sequence_;
+  // log文件的file number
   uint64_t log_number_;
+  // 辅助log的file number, 正在被压缩的文件个数
   uint64_t prev_log_number_;  // 0 or backing store for memtable being compacted
 
   // Opened lazily
+  // manifest文件的封装
   WritableFile* descriptor_file_;
+  // manifest的writer
   log::Writer* descriptor_log_;
+  // 双向链表的dummy头结点
   Version dummy_versions_;  // Head of circular doubly-linked list of versions.
+  // 当前最新的version
   Version* current_;        // == dummy_versions_.prev_
 
   // Per-level key at which the next compaction at that level should start.
   // Either an empty string, or a valid InternalKey.
+  // 上一次压缩的end-key
+  // 下一次压缩的start-key
   std::string compact_pointer_[config::kNumLevels];
 };
 

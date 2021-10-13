@@ -93,8 +93,8 @@ class SkipList {
     void SeekToLast();
 
    private:
-    const SkipList* list_;
-    Node* node_;
+    const SkipList* list_;  // 上层的索引链表
+    Node* node_;  // 最底层的有序节点数组
     // Intentionally copyable
   };
 
@@ -131,10 +131,11 @@ class SkipList {
   Comparator const compare_;
   Arena* const arena_;  // Arena used for allocations of nodes
 
-  Node* const head_;
+  Node* const head_;  // 数组的头结点
 
   // Modified only by Insert().  Read racily by readers, but stale
   // values are ok.
+  // 最大高度
   std::atomic<int> max_height_;  // Height of the entire list
 
   // Read/written only by Insert().
@@ -253,7 +254,7 @@ int SkipList<Key, Comparator>::RandomHeight() {
 
 template <typename Key, class Comparator>
 bool SkipList<Key, Comparator>::KeyIsAfterNode(const Key& key, Node* n) const {
-  // null n is considered infinite
+  // null n is considered infinite(无限的)
   return (n != nullptr) && (compare_(n->key, key) < 0);
 }
 
@@ -265,6 +266,7 @@ SkipList<Key, Comparator>::FindGreaterOrEqual(const Key& key,
   int level = GetMaxHeight() - 1;
   while (true) {
     Node* next = x->Next(level);
+    // 升序的
     if (KeyIsAfterNode(key, next)) {
       // Keep searching in this list
       x = next;
@@ -336,7 +338,7 @@ SkipList<Key, Comparator>::SkipList(Comparator cmp, Arena* arena)
 template <typename Key, class Comparator>
 void SkipList<Key, Comparator>::Insert(const Key& key) {
   // TODO(opt): We can use a barrier-free variant of FindGreaterOrEqual()
-  // here since Insert() is externally synchronized.
+  // here since Insert() is externally(外部) synchronized.
   Node* prev[kMaxHeight];
   Node* x = FindGreaterOrEqual(key, prev);
 
@@ -346,7 +348,7 @@ void SkipList<Key, Comparator>::Insert(const Key& key) {
   int height = RandomHeight();
   if (height > GetMaxHeight()) {
     for (int i = GetMaxHeight(); i < height; i++) {
-      prev[i] = head_;
+      prev[i] = head_;  // why?
     }
     // It is ok to mutate max_height_ without any synchronization
     // with concurrent readers.  A concurrent reader that observes
@@ -358,10 +360,12 @@ void SkipList<Key, Comparator>::Insert(const Key& key) {
     max_height_.store(height, std::memory_order_relaxed);
   }
 
+  // new node节点和上层索引的指针
   x = NewNode(key, height);
   for (int i = 0; i < height; i++) {
-    // NoBarrier_SetNext() suffices since we will add a barrier when
+    // NoBarrier_SetNext() suffices(足够) since we will add a barrier when
     // we publish a pointer to "x" in prev[i].
+    // 插入到各个层级的链表
     x->NoBarrier_SetNext(i, prev[i]->NoBarrier_Next(i));
     prev[i]->SetNext(i, x);
   }

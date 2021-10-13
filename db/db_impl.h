@@ -174,18 +174,24 @@ class DBImpl : public DB {
   port::Mutex mutex_;
   std::atomic<bool> shutting_down_;
   port::CondVar background_work_finished_signal_ GUARDED_BY(mutex_);
+  // memtable
   MemTable* mem_;
+  // immutable
   MemTable* imm_ GUARDED_BY(mutex_);  // Memtable being compacted
   std::atomic<bool> has_imm_;         // So bg thread can detect non-null imm_
+  // log文件的writer
   WritableFile* logfile_;
+  // cur log文件的file-number
   uint64_t logfile_number_ GUARDED_BY(mutex_);
   log::Writer* log_;
   uint32_t seed_ GUARDED_BY(mutex_);  // For sampling.
 
   // Queue of writers.
+  // 双向队列，保存所有要写的请求
   std::deque<Writer*> writers_ GUARDED_BY(mutex_);
   WriteBatch* tmp_batch_ GUARDED_BY(mutex_);
 
+  // 快照
   SnapshotList snapshots_ GUARDED_BY(mutex_);
 
   // Set of table files to protect from deletion because they are
@@ -197,7 +203,7 @@ class DBImpl : public DB {
 
   ManualCompaction* manual_compaction_ GUARDED_BY(mutex_);
 
-  // 正在服务的version链表
+  // versionSet链表的地址
   VersionSet* const versions_ GUARDED_BY(mutex_);
 
   // Have we encountered a background error in paranoid(偏执) mode?

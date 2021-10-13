@@ -1218,7 +1218,9 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
   Writer* last_writer = &w;
   if (status.ok() && updates != nullptr) {  // nullptr batch is for compactions
     WriteBatch* write_batch = BuildBatchGroup(&last_writer);
+    // 前8个字节放seq
     WriteBatchInternal::SetSequence(write_batch, last_sequence + 1);
+    // 批量put的个数
     last_sequence += WriteBatchInternal::Count(write_batch);
 
     // Add to log and apply to memtable.  We can release the lock
@@ -1226,21 +1228,21 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     // and protects against concurrent loggers and concurrent writes
     // into mem_.
     {
-      mutex_.Unlock();
-      status = log_->AddRecord(WriteBatchInternal::Contents(write_batch));
+      mutex_.Unlock();  
+      status = log_->AddRecord(WriteBatchInternal::Contents(write_batch));  // 写日志
       bool sync_error = false;
       if (status.ok() && options.sync) {
-        status = logfile_->Sync();
+        status = logfile_->Sync();  // 刷盘
         if (!status.ok()) {
           sync_error = true;
         }
       }
       if (status.ok()) {
-        status = WriteBatchInternal::InsertInto(write_batch, mem_);
+        status = WriteBatchInternal::InsertInto(write_batch, mem_); // 写memtable
       }
       mutex_.Lock();
       if (sync_error) {
-        // The state of the log file is indeterminate: the log record we
+        // The state of the log file is indeterminate(不确定的): the log record we
         // just added may or may not show up when the DB is re-opened.
         // So we force the DB into a mode where all future writes fail.
         RecordBackgroundError(status);
@@ -1322,6 +1324,7 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
 
 // REQUIRES: mutex_ is held
 // REQUIRES: this thread is currently at the front of the writer queue
+// 为这次写获取空间
 Status DBImpl::MakeRoomForWrite(bool force) {
   mutex_.AssertHeld();
   assert(!writers_.empty());
@@ -1333,37 +1336,38 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       // Yield previous error
       s = bg_error_;
       break;
-    } else if (allow_delay && versions_->NumLevelFiles(0) >=
+    } else if (allow_delay && versions_->NumLevelFiles(0) >=  // 慢处理这次写
                                   config::kL0_SlowdownWritesTrigger) {
       // We are getting close to hitting a hard limit on the number of
       // L0 files.  Rather than delaying a single write by several
       // seconds when we hit the hard limit, start delaying each
-      // individual write by 1ms to reduce latency variance.  Also,
-      // this delay hands over some CPU to the compaction thread in
-      // case it is sharing the same core as the writer.
+      // individual write by 1ms to reduce latency-variance(延迟差异).  Also,
+      // this delay hands-over(移交) some CPU to the compaction thread in-case(一旦，如果)
+      // it is sharing the same core as the writer.
+      // 慢处理，让每一个单独的写延迟1ms而不是让批量的写延迟，这块还不是很懂
       mutex_.Unlock();
       env_->SleepForMicroseconds(1000);
       allow_delay = false;  // Do not delay a single write more than once
       mutex_.Lock();
     } else if (!force &&
-               (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size)) {
+               (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size)) {  // memtable有空间可以写
       // There is room in current memtable
       break;
-    } else if (imm_ != nullptr) {
+    } else if (imm_ != nullptr) { // memtable满了, immutable也满了，需要等待其压缩完
       // We have filled up the current memtable, but the previous
       // one is still being compacted, so we wait.
       Log(options_.info_log, "Current memtable full; waiting...\n");
       background_work_finished_signal_.Wait();
-    } else if (versions_->NumLevelFiles(0) >= config::kL0_StopWritesTrigger) {
+    } else if (versions_->NumLevelFiles(0) >= config::kL0_StopWritesTrigger) {  // level-0的sstable达到阈值了，停止写
       // There are too many level-0 files.
       Log(options_.info_log, "Too many L0 files; waiting...\n");
       background_work_finished_signal_.Wait();
-    } else {
+    } else {  // 写新的memtable, 压缩旧的
       // Attempt to switch to a new memtable and trigger compaction of old
-      assert(versions_->PrevLogNumber() == 0);
-      uint64_t new_log_number = versions_->NewFileNumber();
+      assert(versions_->PrevLogNumber() == 0);  // 没有文件正在被压缩
+      uint64_t new_log_number = versions_->NewFileNumber(); // 最新生成一个文件编号
       WritableFile* lfile = nullptr;
-      s = env_->NewWritableFile(LogFileName(dbname_, new_log_number), &lfile);
+      s = env_->NewWritableFile(LogFileName(dbname_, new_log_number), &lfile);  // 生成新的log文件
       if (!s.ok()) {
         // Avoid chewing through file number space in a tight loop.
         versions_->ReuseFileNumber(new_log_number);
@@ -1376,7 +1380,7 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       log_ = new log::Writer(lfile);
       imm_ = mem_;
       has_imm_.store(true, std::memory_order_release);
-      mem_ = new MemTable(internal_comparator_);
+      mem_ = new MemTable(internal_comparator_);  // 这里new的skiplist
       mem_->Ref();
       force = false;  // Do not force another compaction if have room
       MaybeScheduleCompaction();
