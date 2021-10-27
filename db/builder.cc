@@ -25,7 +25,7 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
   std::string fname = TableFileName(dbname, meta->number);
   if (iter->Valid()) {
     WritableFile* file; // 文件接口类
-    s = env->NewWritableFile(fname, &file);
+    s = env->NewWritableFile(fname, &file); // open file
     if (!s.ok()) {
       return s;
     }
@@ -36,7 +36,7 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
     Slice key;
     for (; iter->Valid(); iter->Next()) {
       key = iter->key();
-      builder->Add(key, iter->value());
+      builder->Add(key, iter->value()); // 添加entry
     }
     if (!key.empty()) {
       meta->largest.DecodeFrom(key);  // sstable文件的最大key

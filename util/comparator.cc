@@ -44,8 +44,8 @@ class BytewiseComparatorImpl : public Comparator {
       uint8_t diff_byte = static_cast<uint8_t>((*start)[diff_index]);
       if (diff_byte < static_cast<uint8_t>(0xff) &&
           diff_byte + 1 < static_cast<uint8_t>(limit[diff_index])) {
-        (*start)[diff_index]++;
-        start->resize(diff_index + 1);
+        (*start)[diff_index]++; // ?
+        start->resize(diff_index + 1); // start只保存公共前缀
         assert(Compare(*start, limit) < 0);
       }
     }

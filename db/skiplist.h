@@ -93,8 +93,8 @@ class SkipList {
     void SeekToLast();
 
    private:
-    const SkipList* list_;  // ÉÏ²ãµÄË÷ÒýÁ´±í
-    Node* node_;  // ×îµ×²ãµÄÓÐÐò½ÚµãÊý×é
+    const SkipList* list_;  // ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    Node* node_;  // ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
     // Intentionally copyable
   };
 
@@ -131,11 +131,11 @@ class SkipList {
   Comparator const compare_;
   Arena* const arena_;  // Arena used for allocations of nodes
 
-  Node* const head_;  // Êý×éµÄÍ·½áµã
+  Node* const head_;  // ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½
 
   // Modified only by Insert().  Read racily by readers, but stale
   // values are ok.
-  // ×î´ó¸ß¶È
+  // ï¿½ï¿½ï¿½ß¶ï¿½
   std::atomic<int> max_height_;  // Height of the entire list
 
   // Read/written only by Insert().
@@ -254,7 +254,7 @@ int SkipList<Key, Comparator>::RandomHeight() {
 
 template <typename Key, class Comparator>
 bool SkipList<Key, Comparator>::KeyIsAfterNode(const Key& key, Node* n) const {
-  // null n is considered infinite(ÎÞÏÞµÄ)
+  // null n is considered infinite(ï¿½ï¿½ï¿½Þµï¿½)
   return (n != nullptr) && (compare_(n->key, key) < 0);
 }
 
@@ -266,7 +266,7 @@ SkipList<Key, Comparator>::FindGreaterOrEqual(const Key& key,
   int level = GetMaxHeight() - 1;
   while (true) {
     Node* next = x->Next(level);
-    // ÉýÐòµÄ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½
     if (KeyIsAfterNode(key, next)) {
       // Keep searching in this list
       x = next;
@@ -338,7 +338,7 @@ SkipList<Key, Comparator>::SkipList(Comparator cmp, Arena* arena)
 template <typename Key, class Comparator>
 void SkipList<Key, Comparator>::Insert(const Key& key) {
   // TODO(opt): We can use a barrier-free variant of FindGreaterOrEqual()
-  // here since Insert() is externally(Íâ²¿) synchronized.
+  // here since Insert() is externally(ï¿½â²¿) synchronized.
   Node* prev[kMaxHeight];
   Node* x = FindGreaterOrEqual(key, prev);
 
@@ -348,7 +348,7 @@ void SkipList<Key, Comparator>::Insert(const Key& key) {
   int height = RandomHeight();
   if (height > GetMaxHeight()) {
     for (int i = GetMaxHeight(); i < height; i++) {
-      prev[i] = head_;  // why?
+      prev[i] = head_;  
     }
     // It is ok to mutate max_height_ without any synchronization
     // with concurrent readers.  A concurrent reader that observes
@@ -360,12 +360,12 @@ void SkipList<Key, Comparator>::Insert(const Key& key) {
     max_height_.store(height, std::memory_order_relaxed);
   }
 
-  // new node½ÚµãºÍÉÏ²ãË÷ÒýµÄÖ¸Õë
+  // new nodeï¿½Úµï¿½ï¿½ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½
   x = NewNode(key, height);
   for (int i = 0; i < height; i++) {
-    // NoBarrier_SetNext() suffices(×ã¹») since we will add a barrier when
+    // NoBarrier_SetNext() suffices(ï¿½ã¹») since we will add a barrier when
     // we publish a pointer to "x" in prev[i].
-    // ²åÈëµ½¸÷¸ö²ã¼¶µÄÁ´±í
+    // ï¿½ï¿½ï¿½ëµ½ï¿½ï¿½ï¿½ï¿½ï¿½ã¼¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     x->NoBarrier_SetNext(i, prev[i]->NoBarrier_Next(i));
     prev[i]->SetNext(i, x);
   }

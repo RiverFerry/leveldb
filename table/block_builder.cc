@@ -71,7 +71,7 @@ Slice BlockBuilder::Finish() {
 void BlockBuilder::Add(const Slice& key, const Slice& value) {
   Slice last_key_piece(last_key_);
   assert(!finished_);
-  assert(counter_ <= options_->block_restart_interval);
+  assert(counter_ <= options_->block_restart_interval); // 默认是16
   assert(buffer_.empty()  // No values yet?
          || options_->comparator->Compare(key, last_key_piece) > 0);
   size_t shared = 0;

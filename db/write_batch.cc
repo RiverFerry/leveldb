@@ -44,12 +44,13 @@ Status WriteBatch::Iterate(Handler* handler) const {
   if (input.size() < kHeader) {
     return Status::Corruption("malformed WriteBatch (too small)");
   }
-
+  // 干掉前12个字节，8个seq + 4个count
   input.remove_prefix(kHeader);
   Slice key, value;
   int found = 0;
   while (!input.empty()) {
     found++;
+    // 第13个字节是type
     char tag = input[0];
     input.remove_prefix(1);
     switch (tag) {
@@ -97,9 +98,9 @@ void WriteBatchInternal::SetSequence(WriteBatch* b, SequenceNumber seq) {
 
 void WriteBatch::Put(const Slice& key, const Slice& value) {
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
-  rep_.push_back(static_cast<char>(kTypeValue));  // key��type
-  PutLengthPrefixedSlice(&rep_, key); // key��data
-  PutLengthPrefixedSlice(&rep_, value); // value��data
+  rep_.push_back(static_cast<char>(kTypeValue));  // key��type
+  PutLengthPrefixedSlice(&rep_, key); // key��data
+  PutLengthPrefixedSlice(&rep_, value); // value��data
 }
 
 void WriteBatch::Delete(const Slice& key) {

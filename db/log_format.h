@@ -12,7 +12,7 @@ namespace leveldb {
 namespace log {
 
 enum RecordType {
-  // Zero is reserved for preallocated files
+  // Zero is reserved(保留) for preallocated files
   kZeroType = 0,
 
   kFullType = 1,

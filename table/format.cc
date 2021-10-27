@@ -13,7 +13,7 @@
 namespace leveldb {
 
 void BlockHandle::EncodeTo(std::string* dst) const {
-  // Sanity check that all fields have been set
+  // Sanity(理智，合理) check that all fields have been set
   assert(offset_ != ~static_cast<uint64_t>(0));
   assert(size_ != ~static_cast<uint64_t>(0));
   PutVarint64(dst, offset_);

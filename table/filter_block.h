@@ -42,7 +42,7 @@ class FilterBlockBuilder {
   void GenerateFilter();
 
   const FilterPolicy* policy_;
-  std::string keys_;             // Flattened key contents
+  std::string keys_;             // Flattened(扁平) key contents
   std::vector<size_t> start_;    // Starting index in keys_ of each key
   std::string result_;           // Filter data computed so far
   std::vector<Slice> tmp_keys_;  // policy_->CreateFilter() argument

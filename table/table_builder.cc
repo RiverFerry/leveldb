@@ -99,11 +99,14 @@ void TableBuilder::Add(const Slice& key, const Slice& value) {
     assert(r->options.comparator->Compare(key, Slice(r->last_key)) > 0);
   }
 
+  // block还没add的时候，pending_index_entry = true
   if (r->pending_index_entry) {
     assert(r->data_block.empty());
-    r->options.comparator->FindShortestSeparator(&r->last_key, key);
+    // Separator: 分离器
+    r->options.comparator->FindShortestSeparator(&r->last_key, key);  // 前缀压缩，last_key resize成公共前缀的大小 
     std::string handle_encoding;
-    r->pending_handle.EncodeTo(&handle_encoding);
+    // 把pending_handled的offset_, size_ append到handle_encoding
+    r->pending_handle.EncodeTo(&handle_encoding); 
     r->index_block.Add(r->last_key, Slice(handle_encoding));
     r->pending_index_entry = false;
   }
@@ -116,6 +119,7 @@ void TableBuilder::Add(const Slice& key, const Slice& value) {
   r->num_entries++;
   r->data_block.Add(key, value);
 
+  // estimated: 估计的
   const size_t estimated_block_size = r->data_block.CurrentSizeEstimate();
   if (estimated_block_size >= r->options.block_size) {
     Flush();
@@ -131,7 +135,7 @@ void TableBuilder::Flush() {
   WriteBlock(&r->data_block, &r->pending_handle);
   if (ok()) {
     r->pending_index_entry = true;
-    r->status = r->file->Flush();
+    r->status = r->file->Flush(); // 刷盘
   }
   if (r->filter_block != nullptr) {
     r->filter_block->StartBlock(r->offset);

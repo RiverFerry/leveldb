@@ -52,12 +52,12 @@ class LEVELDB_EXPORT TableBuilder {
   void Add(const Slice& key, const Slice& value);
 
   // Advanced operation: flush any buffered key/value pairs to file.
-  // Can be used to ensure that two adjacent entries never live in
+  // Can be used to ensure that two adjacent(邻近的) entries never live in
   // the same data block.  Most clients should not need to use this method.
   // REQUIRES: Finish(), Abandon() have not been called
   void Flush();
 
-  // Return non-ok iff some error has been detected.
+  // Return non-ok if some error has been detected.
   Status status() const;
 
   // Finish building the table.  Stops using the file passed to the
@@ -70,6 +70,7 @@ class LEVELDB_EXPORT TableBuilder {
   // If the caller is not going to call Finish(), it must call Abandon()
   // before destroying this builder.
   // REQUIRES: Finish(), Abandon() have not been called
+  // 放弃
   void Abandon();
 
   // Number of calls to Add() so far.
