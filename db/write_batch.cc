@@ -98,9 +98,9 @@ void WriteBatchInternal::SetSequence(WriteBatch* b, SequenceNumber seq) {
 
 void WriteBatch::Put(const Slice& key, const Slice& value) {
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
-  rep_.push_back(static_cast<char>(kTypeValue));  // key��type
-  PutLengthPrefixedSlice(&rep_, key); // key��data
-  PutLengthPrefixedSlice(&rep_, value); // value��data
+  rep_.push_back(static_cast<char>(kTypeValue));  // key type
+  PutLengthPrefixedSlice(&rep_, key); // key data
+  PutLengthPrefixedSlice(&rep_, value); // value data
 }
 
 void WriteBatch::Delete(const Slice& key) {
