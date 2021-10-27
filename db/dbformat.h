@@ -22,32 +22,32 @@ namespace leveldb {
 // Grouping of constants.  We may want to make some of these
 // parameters set via options.
 namespace config {
-// levelµÄ×î´óÖµ
+// levelçš„æœ€å¤§å€¼
 static const int kNumLevels = 7;
 
 // Level-0 compaction is started when we hit this many files.
-// level-0µÄsstableÎÄ¼şÊıÁ¿´ïµ½Õâ¸öÖµ¿ªÊ¼compact
+// level-0çš„sstableæ–‡ä»¶æ•°é‡è¾¾åˆ°è¿™ä¸ªå€¼å¼€å§‹compact
 static const int kL0_CompactionTrigger = 4;
 
 // Soft limit on number of level-0 files.  We slow down writes at this point.
-// level-0µÄsstableÎÄ¼şÊıÁ¿´ïµ½Õâ¸öÖµ¿ªÊ¼Âı´¦ÀíĞ´
+// level-0çš„sstableæ–‡ä»¶æ•°é‡è¾¾åˆ°è¿™ä¸ªå€¼å¼€å§‹æ…¢å¤„ç†å†™
 static const int kL0_SlowdownWritesTrigger = 8;
 
 // Maximum number of level-0 files.  We stop writes at this point.
-// level-0µÄsstableÎÄ¼şÊıÁ¿´ïµ½Õâ¸öÖµÍ£Ö¹Ğ´£¬×èÈûµ½compactÍê³É
+// level-0çš„sstableæ–‡ä»¶æ•°é‡è¾¾åˆ°è¿™ä¸ªå€¼åœæ­¢å†™ï¼Œé˜»å¡åˆ°compactå®Œæˆ
 static const int kL0_StopWritesTrigger = 12;
 
 // Maximum level to which a new compacted memtable is pushed if it
-// does not create overlap(ÖØµş).  We try to push to level 2 to avoid the
-// relatively(Ïà¶ÔµÄ) expensive level 0=>1 compactions and to avoid some
+// does not create overlap(é‡å ).  We try to push to level 2 to avoid the
+// relatively(ç›¸å¯¹çš„) expensive level 0=>1 compactions and to avoid some
 // expensive manifest file operations.  We do not push all the way to
 // the largest level since that can generate a lot of wasted disk
 // space if the same key space is being repeatedly overwritten.
-// memtableÔÊĞí±»dumpµ½µÄ×î´ó²ã¼¶£¬ÎªÊ²Ã´Òªdumpµ½¸ü¸ß²ã¼¶£¿ºóÃæ¿´µ½ÁËÔÙ²¹³ä
+// memtableå…è®¸è¢«dumpåˆ°çš„æœ€å¤§å±‚çº§ï¼Œä¸ºä»€ä¹ˆè¦dumpåˆ°æ›´é«˜å±‚çº§ï¼Ÿåé¢çœ‹åˆ°äº†å†è¡¥å……
 static const int kMaxMemCompactLevel = 2;
 
-// Approximate gap in bytes between samples(ÑùÆ·) of data read during iteration.
-// µü´úµÄÊı¾İÑùÆ·¼äµÄ½üËÆ×Ö½Ú¼äÏ¶£¿ºóÃæ¿´µ½ÁËÔÙ²¹³ä
+// Approximate gap in bytes between samples(æ ·å“) of data read during iteration.
+// è¿­ä»£çš„æ•°æ®æ ·å“é—´çš„è¿‘ä¼¼å­—èŠ‚é—´éš™ï¼Ÿåé¢çœ‹åˆ°äº†å†è¡¥å……
 static const int kReadBytesPeriod = 1048576;
 
 }  // namespace config

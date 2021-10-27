@@ -1218,9 +1218,9 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
   Writer* last_writer = &w;
   if (status.ok() && updates != nullptr) {  // nullptr batch is for compactions
     WriteBatch* write_batch = BuildBatchGroup(&last_writer);
-    // Ç°8¸ö×Ö½Ú·Åseq
+    // å‰8ä¸ªå­—èŠ‚æ”¾seq
     WriteBatchInternal::SetSequence(write_batch, last_sequence + 1);
-    // ÅúÁ¿putµÄ¸öÊý
+    // æ‰¹é‡putçš„ä¸ªæ•°
     last_sequence += WriteBatchInternal::Count(write_batch);
 
     // Add to log and apply to memtable.  We can release the lock
@@ -1229,20 +1229,20 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     // into mem_.
     {
       mutex_.Unlock();  
-      status = log_->AddRecord(WriteBatchInternal::Contents(write_batch));  // Ð´ÈÕÖ¾
+      status = log_->AddRecord(WriteBatchInternal::Contents(write_batch));  // å†™æ—¥å¿—
       bool sync_error = false;
       if (status.ok() && options.sync) {
-        status = logfile_->Sync();  // Ë¢ÅÌ
+        status = logfile_->Sync();  // åˆ·ç›˜
         if (!status.ok()) {
           sync_error = true;
         }
       }
       if (status.ok()) {
-        status = WriteBatchInternal::InsertInto(write_batch, mem_); // Ð´memtable
+        status = WriteBatchInternal::InsertInto(write_batch, mem_); // å†™memtable
       }
       mutex_.Lock();
       if (sync_error) {
-        // The state of the log file is indeterminate(²»È·¶¨µÄ): the log record we
+        // The state of the log file is indeterminate(ä¸ç¡®å®šçš„): the log record we
         // just added may or may not show up when the DB is re-opened.
         // So we force the DB into a mode where all future writes fail.
         RecordBackgroundError(status);
@@ -1324,11 +1324,11 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
 
 // REQUIRES: mutex_ is held
 // REQUIRES: this thread is currently at the front of the writer queue
-// ÎªÕâ´ÎÐ´»ñÈ¡¿Õ¼ä
+// ä¸ºè¿™æ¬¡å†™èŽ·å–ç©ºé—´
 Status DBImpl::MakeRoomForWrite(bool force) {
   mutex_.AssertHeld();
   assert(!writers_.empty());
-  // batch´«ÈëµÄÖµ·Ç¿Õ£¬ÔòÔÊÐídelay
+  // batchä¼ å…¥çš„å€¼éžç©ºï¼Œåˆ™å…è®¸delay
   bool allow_delay = !force;
   Status s;
   while (true) {
@@ -1336,38 +1336,38 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       // Yield previous error
       s = bg_error_;
       break;
-    } else if (allow_delay && versions_->NumLevelFiles(0) >=  // Âý´¦ÀíÕâ´ÎÐ´
+    } else if (allow_delay && versions_->NumLevelFiles(0) >=  // æ…¢å¤„ç†è¿™æ¬¡å†™
                                   config::kL0_SlowdownWritesTrigger) {
       // We are getting close to hitting a hard limit on the number of
       // L0 files.  Rather than delaying a single write by several
       // seconds when we hit the hard limit, start delaying each
-      // individual write by 1ms to reduce latency-variance(ÑÓ³Ù²îÒì).  Also,
-      // this delay hands-over(ÒÆ½») some CPU to the compaction thread in-case(Ò»µ©£¬Èç¹û)
+      // individual write by 1ms to reduce latency-variance(å»¶è¿Ÿå·®å¼‚).  Also,
+      // this delay hands-over(ç§»äº¤) some CPU to the compaction thread in-case(ä¸€æ—¦ï¼Œå¦‚æžœ)
       // it is sharing the same core as the writer.
-      // Âý´¦Àí£¬ÈÃÃ¿Ò»¸öµ¥¶ÀµÄÐ´ÑÓ³Ù1ms¶ø²»ÊÇÈÃÅúÁ¿µÄÐ´ÑÓ³Ù£¬Õâ¿é»¹²»ÊÇºÜ¶®
+      // æ…¢å¤„ç†ï¼Œè®©æ¯ä¸€ä¸ªå•ç‹¬çš„å†™å»¶è¿Ÿ1msè€Œä¸æ˜¯è®©æ‰¹é‡çš„å†™å»¶è¿Ÿï¼Œè¿™å—è¿˜ä¸æ˜¯å¾ˆæ‡‚
       mutex_.Unlock();
       env_->SleepForMicroseconds(1000);
       allow_delay = false;  // Do not delay a single write more than once
       mutex_.Lock();
     } else if (!force &&
-               (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size)) {  // memtableÓÐ¿Õ¼ä¿ÉÒÔÐ´
+               (mem_->ApproximateMemoryUsage() <= options_.write_buffer_size)) {  // memtableæœ‰ç©ºé—´å¯ä»¥å†™
       // There is room in current memtable
       break;
-    } else if (imm_ != nullptr) { // memtableÂúÁË, immutableÒ²ÂúÁË£¬ÐèÒªµÈ´ýÆäÑ¹ËõÍê
+    } else if (imm_ != nullptr) { // memtableæ»¡äº†, immutableä¹Ÿæ»¡äº†ï¼Œéœ€è¦ç­‰å¾…å…¶åŽ‹ç¼©å®Œ
       // We have filled up the current memtable, but the previous
       // one is still being compacted, so we wait.
       Log(options_.info_log, "Current memtable full; waiting...\n");
       background_work_finished_signal_.Wait();
-    } else if (versions_->NumLevelFiles(0) >= config::kL0_StopWritesTrigger) {  // level-0µÄsstable´ïµ½ãÐÖµÁË£¬Í£Ö¹Ð´
+    } else if (versions_->NumLevelFiles(0) >= config::kL0_StopWritesTrigger) {  // level-0çš„sstableè¾¾åˆ°é˜ˆå€¼äº†ï¼Œåœæ­¢å†™
       // There are too many level-0 files.
       Log(options_.info_log, "Too many L0 files; waiting...\n");
       background_work_finished_signal_.Wait();
-    } else {  // Ð´ÐÂµÄmemtable, Ñ¹Ëõ¾ÉµÄ
+    } else {  // å†™æ–°çš„memtable, åŽ‹ç¼©æ—§çš„
       // Attempt to switch to a new memtable and trigger compaction of old
-      assert(versions_->PrevLogNumber() == 0);  // Ã»ÓÐÎÄ¼þÕýÔÚ±»Ñ¹Ëõ
-      uint64_t new_log_number = versions_->NewFileNumber(); // ×îÐÂÉú³ÉÒ»¸öÎÄ¼þ±àºÅ
+      assert(versions_->PrevLogNumber() == 0);  // æ²¡æœ‰æ–‡ä»¶æ­£åœ¨è¢«åŽ‹ç¼©
+      uint64_t new_log_number = versions_->NewFileNumber(); // æœ€æ–°ç”Ÿæˆä¸€ä¸ªæ–‡ä»¶ç¼–å·
       WritableFile* lfile = nullptr;
-      s = env_->NewWritableFile(LogFileName(dbname_, new_log_number), &lfile);  // Éú³ÉÐÂµÄlogÎÄ¼þ
+      s = env_->NewWritableFile(LogFileName(dbname_, new_log_number), &lfile);  // ç”Ÿæˆæ–°çš„logæ–‡ä»¶
       if (!s.ok()) {
         // Avoid chewing through file number space in a tight loop.
         versions_->ReuseFileNumber(new_log_number);
@@ -1380,7 +1380,7 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       log_ = new log::Writer(lfile);
       imm_ = mem_;
       has_imm_.store(true, std::memory_order_release);
-      mem_ = new MemTable(internal_comparator_);  // ÕâÀïnewµÄskiplist
+      mem_ = new MemTable(internal_comparator_);  // è¿™é‡Œnewçš„skiplist
       mem_->Ref();
       force = false;  // Do not force another compaction if have room
       MaybeScheduleCompaction();
