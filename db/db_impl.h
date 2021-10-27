@@ -195,7 +195,8 @@ class DBImpl : public DB {
   SnapshotList snapshots_ GUARDED_BY(mutex_);
 
   // Set of table files to protect from deletion because they are
-  // part of ongoing compactions.
+  // part of ongoing(进行中) compactions.
+  // 存的是正在被压缩的sstable文件编号
   std::set<uint64_t> pending_outputs_ GUARDED_BY(mutex_);
 
   // Has a background compaction been scheduled or is running?
@@ -209,6 +210,7 @@ class DBImpl : public DB {
   // Have we encountered a background error in paranoid(ƫִ) mode?
   Status bg_error_ GUARDED_BY(mutex_);
 
+  // 记录每次压缩的耗时和生成文件的大小
   CompactionStats stats_[config::kNumLevels] GUARDED_BY(mutex_);
 };
 

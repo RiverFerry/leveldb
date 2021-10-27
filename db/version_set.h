@@ -151,9 +151,11 @@ class Version {
   int refs_;          // Number of live refs to this version
 
   // List of files per level
+  // 二维数组
   std::vector<FileMetaData*> files_[config::kNumLevels];
 
   // Next file to compact based on seek stats.
+  // seek触发的压缩
   FileMetaData* file_to_compact_;
   int file_to_compact_level_;
 

@@ -18,31 +18,34 @@ Status BuildTable(const std::string& dbname, Env* env, const Options& options,
                   TableCache* table_cache, Iterator* iter, FileMetaData* meta) {
   Status s;
   meta->file_size = 0;
+  // 跳表最底层的head
   iter->SeekToFirst();
 
+  // 文件名 000025.ldb
   std::string fname = TableFileName(dbname, meta->number);
   if (iter->Valid()) {
-    WritableFile* file;
+    WritableFile* file; // 文件接口类
     s = env->NewWritableFile(fname, &file);
     if (!s.ok()) {
       return s;
     }
 
     TableBuilder* builder = new TableBuilder(options, file);
-    meta->smallest.DecodeFrom(iter->key());
+    // rep_转换为slice格式
+    meta->smallest.DecodeFrom(iter->key()); // sstable文件的最小key
     Slice key;
     for (; iter->Valid(); iter->Next()) {
       key = iter->key();
       builder->Add(key, iter->value());
     }
     if (!key.empty()) {
-      meta->largest.DecodeFrom(key);
+      meta->largest.DecodeFrom(key);  // sstable文件的最大key
     }
 
     // Finish and check for builder errors
-    s = builder->Finish();
+    s = builder->Finish();  // 核心的处理逻辑
     if (s.ok()) {
-      meta->file_size = builder->FileSize();
+      meta->file_size = builder->FileSize();  // 文件大小
       assert(meta->file_size > 0);
     }
     delete builder;

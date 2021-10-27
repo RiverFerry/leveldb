@@ -49,13 +49,13 @@ struct TableBuilder::Rep {
 
   // We do not emit the index entry for a block until we have seen the
   // first key for the next data block.  This allows us to use shorter
-  // keys in the index block.  For example, consider a block boundary
+  // keys in the index block.  For example, consider a block boundary(边界)
   // between the keys "the quick brown fox" and "the who".  We can use
   // "the r" as the key for the index block entry since it is >= all
-  // entries in the first block and < all entries in subsequent
+  // entries in the first block and < all entries in subsequent(随后的)
   // blocks.
   //
-  // Invariant: r->pending_index_entry is true only if data_block is empty.
+  // Invariant(不变量): r->pending_index_entry is true only if data_block is empty.
   bool pending_index_entry;
   BlockHandle pending_handle;  // Handle to add to index block
 

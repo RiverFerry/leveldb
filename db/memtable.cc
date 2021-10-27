@@ -14,7 +14,7 @@ namespace leveldb {
 static Slice GetLengthPrefixedSlice(const char* data) {
   uint32_t len;
   const char* p = data;
-  p = GetVarint32Ptr(p, p + 5, &len);  // +5: we assume "p" is not corrupted
+  p = GetVarint32Ptr(p, p + 5, &len);  // +5: we assume "p" is not corrupted(损坏)
   return Slice(p, len);
 }
 
@@ -43,6 +43,7 @@ static const char* EncodeKey(std::string* scratch, const Slice& target) {
   return scratch->data();
 }
 
+// 对跳表的iterator进行了简单的封装
 class MemTableIterator : public Iterator {
  public:
   explicit MemTableIterator(MemTable::Table* table) : iter_(table) {}
@@ -58,7 +59,9 @@ class MemTableIterator : public Iterator {
   void SeekToLast() override { iter_.SeekToLast(); }
   void Next() override { iter_.Next(); }
   void Prev() override { iter_.Prev(); }
+  // char* 转成slice格式
   Slice key() const override { return GetLengthPrefixedSlice(iter_.key()); }
+  // char* 转成slice格式
   Slice value() const override {
     Slice key_slice = GetLengthPrefixedSlice(iter_.key());
     return GetLengthPrefixedSlice(key_slice.data() + key_slice.size());

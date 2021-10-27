@@ -507,9 +507,10 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
+  // 要写新文件，所以需要一个新的文件名编号
   meta.number = versions_->NewFileNumber();
-  pending_outputs_.insert(meta.number);
-  Iterator* iter = mem->NewIterator();
+  pending_outputs_.insert(meta.number); // 防止正在压缩的sstable文件被删除
+  Iterator* iter = mem->NewIterator();  // mem传入的值是immu
   Log(options_.info_log, "Level-0 table #%llu: started",
       (unsigned long long)meta.number);
 
@@ -539,6 +540,7 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                   meta.largest);
   }
 
+  // 记录统计数据
   CompactionStats stats;
   stats.micros = env_->NowMicros() - start_micros;
   stats.bytes_written = meta.file_size;
@@ -561,7 +563,7 @@ void DBImpl::CompactMemTable() {
     s = Status::IOError("Deleting DB during memtable compaction");
   }
 
-  // Replace immutable memtable with the generated Table
+  // Replace immutable memtable with the generated(生成的) Table
   if (s.ok()) {
     edit.SetPrevLogNumber(0);
     edit.SetLogNumber(logfile_number_);  // Earlier logs no longer needed
@@ -573,6 +575,7 @@ void DBImpl::CompactMemTable() {
     imm_->Unref();
     imm_ = nullptr;
     has_imm_.store(false, std::memory_order_release);
+    // Obsolete: 过时的
     RemoveObsoleteFiles();
   } else {
     RecordBackgroundError(s);

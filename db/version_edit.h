@@ -20,6 +20,7 @@ struct FileMetaData {
 
   int refs;
   int allowed_seeks;  // Seeks allowed until compaction
+  // 文件编号
   uint64_t number;
   uint64_t file_size;    // File size in bytes
   InternalKey smallest;  // Smallest internal key served by table
