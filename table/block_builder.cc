@@ -105,3 +105,4 @@ void BlockBuilder::Add(const Slice& key, const Slice& value) {
 }
 
 }  // namespace leveldb
+// num of entry
